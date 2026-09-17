@@ -33,8 +33,11 @@ class AIAdapterOpenAI(models.AbstractModel):
             payload['tools'] = tools
             payload['tool_choice'] = 'auto'
 
+        response = None
+
         try:
-            response = requests.post(endpoint, headers=headers, json=payload, timeout=60)
+
+            response = requests.post(endpoint, headers=headers, json=payload, timeout=600)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             error_msg = response.text if response is not None else str(e)

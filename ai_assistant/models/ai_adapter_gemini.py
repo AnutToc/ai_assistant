@@ -42,8 +42,11 @@ class AIAdapterGemini(models.AbstractModel):
                 })
             payload['tools'] = [{'function_declarations': gemini_tools}]
 
+        response = None
+
         try:
-            response = requests.post(endpoint, headers=headers, json=payload, timeout=60)
+
+            response = requests.post(endpoint, headers=headers, json=payload, timeout=600)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             error_msg = response.text if 'response' in locals() and response is not None else str(e)
