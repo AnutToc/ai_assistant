@@ -1,3 +1,4 @@
+import logging
 from odoo import models, api
 from odoo.exceptions import UserError
 
@@ -15,7 +16,22 @@ class AIEngine(models.AbstractModel):
         tools = self._get_tools()
         import json
 
+        
         max_turns = 5
+        
+        # --- INJECT STRICT SYSTEM PROMPT ---
+        system_instruction = (
+            "You are an expert Odoo ERP AI Assistant. "
+            "CRITICAL RULES: "
+            "1. NEVER guess field names for Odoo models. Odoo schemas change between versions. "
+            "2. ALWAYS use the 'get_fields' tool to inspect a model before using 'search_records'. "
+            "3. If a tool execution fails with 'Invalid field', immediately use 'get_fields' to find the correct field name before retrying."
+        )
+        if messages and messages[0].get('role') != 'system':
+            messages.insert(0, {'role': 'system', 'content': system_instruction})
+        elif messages and messages[0].get('role') == 'system':
+            messages[0]['content'] = system_instruction + "\n\n" + messages[0]['content']
+            
         for turn in range(max_turns):
             # 1. Send Request
             if provider.protocol_type == 'openai_compatible':
@@ -56,7 +72,15 @@ class AIEngine(models.AbstractModel):
                         tool_id = tc.get('id', 'call_123')
 
                     # Execute Odoo Tool (e.g. search_records)
+                    _logger.info("=========================================")
+                    _logger.info(f"AI TURN {turn+1}: Calling Tool -> {func_name}")
+                    _logger.info(f"ARGS: {func_args}")
+                    
+                    # Execute Odoo Tool (e.g. search_records)
                     result = self.env['ai.tools.executor'].execute_tool(func_name, func_args)
+                    
+                    _logger.info(f"RESULT (Snippet): {str(result)[:300]}")
+                    _logger.info("=========================================")
                     result_str = json.dumps(result, default=str)
 
                     # Append result to messages
