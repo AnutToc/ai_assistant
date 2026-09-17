@@ -2,7 +2,7 @@ from odoo import models, api
 import logging
 import re
 
-_logger = logging.getLogger(__name__)
+# _logger = logging.getLogger(__name__)
 
 def _clean_html(html_str):
     if not html_str:
@@ -43,7 +43,7 @@ class DiscussChannel(models.Model):
                 is_mentioned = bot_partner.id in message.partner_ids.ids
                 
                 if is_dm or is_mentioned:
-                    _logger.info("AI Assistant: Gathering conversation history...")
+                    # _logger.info("AI Assistant: Gathering conversation history...")
                     
                     # 4. MEMORY SYSTEM: Fetch last 15 messages from THIS channel
                     domain = [
@@ -75,7 +75,7 @@ class DiscussChannel(models.Model):
                         reply_content = response.get('content', "No response generated.")
                     except Exception as e:
                         reply_content = f"System Error: {str(e)}"
-                        _logger.error("AI Assistant API Error: %s", str(e))
+                        # _logger.exception("AI Assistant API Error")
                     
                     # 6. Post AI Reply
                     self.with_context(mail_create_nosubscribe=True).message_post(
@@ -85,6 +85,7 @@ class DiscussChannel(models.Model):
                         subtype_xmlid='mail.mt_comment',
                     )
         except Exception as e:
-            _logger.error("AI Assistant Interceptor crashed: %s", str(e))
+            # _logger.exception("AI Assistant Interceptor crashed")
+            pass
             
         return message

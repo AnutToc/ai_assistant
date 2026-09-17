@@ -4,7 +4,7 @@ import logging
 from odoo import models, api
 from odoo.exceptions import AccessError, ValidationError
 
-_logger = logging.getLogger(__name__)
+# _logger = logging.getLogger(__name__)
 
 # Markers used for In-Flight Sanitization
 SENSITIVE_FIELD_MARKERS = ['password', 'secret', 'token', 'api_key', 'otp', 'pin', 'session']
@@ -88,5 +88,5 @@ class AIToolsExecutor(models.AbstractModel):
             return {"error": "Access Denied: The current user does not have permission for this record/model."}
         except Exception as e:
             # 4. Error Sanitization
-            _logger.warning("AI Tool Execution Error: %s", str(e))
+            # _logger.warning("AI Tool Execution Error: %s", str(e))
             return {"error": self._sanitize_error(e)}

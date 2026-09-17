@@ -17,7 +17,7 @@ class AIEngine(models.AbstractModel):
         import json
 
         
-        max_turns = 5
+        max_turns = 10
         
         # --- INJECT STRICT SYSTEM PROMPT ---
         system_instruction = (
@@ -72,15 +72,15 @@ class AIEngine(models.AbstractModel):
                         tool_id = tc.get('id', 'call_123')
 
                     # Execute Odoo Tool (e.g. search_records)
-                    _logger.info("=========================================")
-                    _logger.info(f"AI TURN {turn+1}: Calling Tool -> {func_name}")
-                    _logger.info(f"ARGS: {func_args}")
+                    # _logger.info("=========================================")
+                    # _logger.info(f"AI TURN {turn+1}: Calling Tool -> {func_name}")
+                    # _logger.info(f"ARGS: {func_args}")
                     
                     # Execute Odoo Tool (e.g. search_records)
                     result = self.env['ai.tools.executor'].execute_tool(func_name, func_args)
                     
-                    _logger.info(f"RESULT (Snippet): {str(result)[:300]}")
-                    _logger.info("=========================================")
+                    # _logger.info(f"RESULT (Snippet): {str(result)[:300]}")
+                    # _logger.info("=========================================")
                     result_str = json.dumps(result, default=str)
 
                     # Append result to messages
