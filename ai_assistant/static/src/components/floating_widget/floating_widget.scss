@@ -1,0 +1,14 @@
+
+.o_MessagingMenu .fa-magic {
+    color: #00A09D; /* Odoo AI primary color */
+}
+.o_MessagingMenu .fa-magic:hover {
+    color: #007775;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}

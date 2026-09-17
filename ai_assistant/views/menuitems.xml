@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_ai_assistant_root"
+              name="AI Assistant"
+              sequence="50"/>
+    <menuitem id="menu_ai_configuration"
+              name="Configuration"
+              parent="menu_ai_assistant_root"
+              sequence="100"/>
+    <menuitem id="menu_ai_providers"
+              name="AI Providers"
+              parent="menu_ai_configuration"
+              action="action_ai_provider"
+              sequence="10"/>
+</odoo>
