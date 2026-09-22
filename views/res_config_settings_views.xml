@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_ai" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.ai</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="AI Assistant" string="AI Assistant" name="ai_assistant">
+                    <block title="AI Permissions" name="ai_security_setting_container">
+                        <setting id="ai_create_access_setting" title="Allow AI to create new records" help="Enable AI to create new records in Odoo." groups="base.group_no_one">
+                            <field name="ai_enable_create_tools"/>
+                        </setting>
+                        <setting id="ai_update_access_setting" title="Allow AI to update existing records" help="Enable AI to modify existing records in Odoo." groups="base.group_no_one">
+                            <field name="ai_enable_update_tools"/>
+                        </setting>
+                        <setting id="ai_delete_access_setting" title="Allow AI to delete existing records" help="Enable AI to permanently delete records in Odoo." groups="base.group_no_one">
+                            <field name="ai_enable_delete_tools"/>
+                        </setting>
+                    </block>
+                    <block title="AI Configuration" name="ai_config_setting_container">
+                        <setting id="ai_max_history_setting" title="Max History Messages" help="Number of previous messages to remember in the conversation context.">
+                            <field name="ai_max_history_messages"/>
+                        </setting>
+                        <setting id="ai_max_tool_turns_setting" title="Max Tool Execution Turns" help="Maximum number of consecutive tool calls allowed per request to prevent infinite loops.">
+                            <field name="ai_max_tool_turns"/>
+                        </setting>
+                        <setting id="ai_write_keywords_setting" title="Write Action Keywords" help="Comma-separated list of keywords to trigger the Write AI Provider.">
+                            <field name="ai_write_keywords"/>
+                        </setting>
+                        <setting id="ai_custom_system_prompt_setting" title="Custom System Prompt" help="Additional instructions to append to the system prompt globally.">
+                            <field name="ai_custom_system_prompt"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_ai_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'ai_assistant', 'bin_size': False}</field>
+    </record>
+</odoo>

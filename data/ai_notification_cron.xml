@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_run_ai_notification_rules" model="ir.cron">
+            <field name="name">AI Assistant: Run Proactive Notification Rules</field>
+            <field name="model_id" ref="model_ai_notification_rule"/>
+            <field name="state">code</field>
+            <field name="code">model._run_notification_rules()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

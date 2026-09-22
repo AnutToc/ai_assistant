@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ai_notification_rule_tree" model="ir.ui.view">
+        <field name="name">ai.notification.rule.tree</field>
+        <field name="model">ai.notification.rule</field>
+        <field name="arch" type="xml">
+            <list string="Notification Rules">
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="channel_id"/>
+                <field name="repeat_interval_days"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ai_notification_rule_form" model="ir.ui.view">
+        <field name="name">ai.notification.rule.form</field>
+        <field name="model">ai.notification.rule</field>
+        <field name="arch" type="xml">
+            <form string="Notification Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="is_active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Invoices Overdue > 15 Days"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="model_id"/>
+                            <field name="model_name" invisible="1"/>
+                            <field name="domain" widget="domain" options="{'in_dialog': True, 'model': 'model_name'}"/>
+                        </group>
+                        <group>
+                            <field name="channel_id"/>
+                            <field name="repeat_interval_days"/>
+                            <field name="is_active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Prompt Template" name="prompt_template">
+                            <field name="prompt_template" placeholder="Please summarize these records: {records}" style="height: 150px;"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ai_notification_rule" model="ir.actions.act_window">
+        <field name="name">Notification Rules</field>
+        <field name="res_model">ai.notification.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_ai_assistant_root" name="AI Assistant" sequence="50"/>
+    <menuitem id="menu_ai_configuration" name="Configuration" parent="menu_ai_assistant_root" sequence="100"/>
+    <menuitem id="menu_ai_providers" name="AI Providers" parent="menu_ai_configuration" action="action_ai_provider" sequence="10"/>
+    <menuitem id="menu_ai_prompt_templates" name="Prompt Templates" parent="menu_ai_configuration" action="action_ai_prompt_template" sequence="20"/>
+    <menuitem id="menu_ai_notification_rule" name="Notification Rules" parent="menu_ai_configuration" action="action_ai_notification_rule" sequence="30"/>
+    <menuitem id="menu_ai_settings" name="Settings" parent="menu_ai_configuration" action="action_ai_config_settings" sequence="100"/>
+</odoo>

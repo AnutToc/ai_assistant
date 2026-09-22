@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="prompt_template_search_customers" model="ai.prompt.template">
+            <field name="name">Search all customers</field>
+            <field name="description">Show a list of customers that are companies in the system.</field>
+            <field name="prompt_text">Show a list of all customers that are companies (is_company = True), including their names, emails, and phone numbers.</field>
+            <field name="category">crm</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="prompt_template_sale_summary" model="ai.prompt.template">
+            <field name="name">Sales summary this month</field>
+            <field name="description">Summarize confirmed Sale Orders in the current month.</field>
+            <field name="prompt_text">Summarize the total amount of confirmed Sale Orders (state = sale) for this month. Show the number of orders and total sales amount.</field>
+            <field name="category">sales</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="prompt_template_low_stock" model="ai.prompt.template">
+            <field name="name">Low stock products</field>
+            <field name="description">Find products with low quantity on hand.</field>
+            <field name="prompt_text">Search for products (product.product) with qty_available less than 10. Show the product name and remaining quantity.</field>
+            <field name="category">inventory</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="prompt_template_overdue_invoices" model="ai.prompt.template">
+            <field name="name">Overdue Invoices</field>
+            <field name="description">Show invoices that are past their due date.</field>
+            <field name="prompt_text">Search for account.move records that are invoices (move_type = out_invoice) with state = posted and have passed their due date. Show the customer name, document number, and amount due.</field>
+            <field name="category">accounting</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="prompt_template_employee_list" model="ai.prompt.template">
+            <field name="name">Employee List</field>
+            <field name="description">Show a list of all employees in the system.</field>
+            <field name="prompt_text">Show a list of all employees (hr.employee) along with their departments, job titles, and emails.</field>
+            <field name="category">hr</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="prompt_template_explain_fields" model="ai.prompt.template">
+            <field name="name">Inspect Model Structure</field>
+            <field name="description">View all fields of a specified model.</field>
+            <field name="prompt_text">Show all fields of the res.partner model and explain what each field does.</field>
+            <field name="category">general</field>
+            <field name="sequence">10</field>
+        </record>
+    </data>
+</odoo>

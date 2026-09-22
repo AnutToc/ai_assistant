@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ai_prompt_template_tree" model="ir.ui.view">
+        <field name="name">ai.prompt.template.tree</field>
+        <field name="model">ai.prompt.template</field>
+        <field name="arch" type="xml">
+            <list string="Prompt Templates">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="prompt_text" widget="text"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ai_prompt_template_form" model="ir.ui.view">
+        <field name="name">ai.prompt.template.form</field>
+        <field name="model">ai.prompt.template</field>
+        <field name="arch" type="xml">
+            <form string="Prompt Template">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="is_active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g., Summarize today's sales"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category"/>
+                            <field name="sequence"/>
+                            <field name="is_active"/>
+                        </group>
+                        <group>
+                            <field name="description" placeholder="Brief description of what this template does"/>
+                        </group>
+                    </group>
+                    <separator string="Prompt Text"/>
+                    <field name="prompt_text" placeholder="Type the command to send to AI, e.g., &#10;Summarize confirmed Sale Orders this month by customer"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ai_prompt_template_search" model="ir.ui.view">
+        <field name="name">ai.prompt.template.search</field>
+        <field name="model">ai.prompt.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Templates">
+                <field name="name"/>
+                <field name="category"/>
+                <filter string="Active" name="filter_active" domain="[('is_active', '=', True)]"/>
+                <filter string="Archived" name="filter_archived" domain="[('is_active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ai_prompt_template" model="ir.actions.act_window">
+        <field name="name">Prompt Templates</field>
+        <field name="res_model">ai.prompt.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+    </record>
+</odoo>

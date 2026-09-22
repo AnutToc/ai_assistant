@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_provider_admin,ai.provider.admin,model_ai_provider,base.group_system,1,1,1,1
+access_ai_provider_user,ai.provider.user,model_ai_provider,base.group_user,1,0,0,0
+access_ai_prompt_template_admin,ai.prompt.template.admin,model_ai_prompt_template,base.group_system,1,1,1,1
+access_ai_prompt_template_user,ai.prompt.template.user,model_ai_prompt_template,base.group_user,1,0,0,0
+access_ai_notification_rule_user,access.ai.notification.rule.user,model_ai_notification_rule,base.group_user,1,0,0,0
+access_ai_notification_rule_admin,access.ai.notification.rule.admin,model_ai_notification_rule,base.group_system,1,1,1,1
+access_ai_notification_log_admin,access.ai.notification.log.admin,model_ai_notification_log,base.group_system,1,1,1,1
+access_ai_notification_log_user,access.ai.notification.log.user,model_ai_notification_log,base.group_user,1,0,0,0
