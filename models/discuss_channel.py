@@ -42,6 +42,7 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
             return msg.id
             
         placeholder_id = run_with_retry(post_placeholder)
+        ai_msg_ids = [placeholder_id]
         
         # 2. Call AI Engine (Outside of any long-running transaction locks)
         registry = odoo.modules.registry.Registry(db_name)
@@ -49,10 +50,14 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
             env = api.Environment(cr, uid, context)
             channel = env['discuss.channel'].browse(channel_id)
             try:
-                response = env['ai.engine'].chat(messages_payload, channel=channel, ai_msg_ids=[placeholder_id])
+                response = env['ai.engine'].chat(messages_payload, channel=channel, ai_msg_ids=ai_msg_ids)
                 reply_content = response.get('content', "No response generated.")
             except Exception as e:
                 reply_content = f"System Error: {str(e)}"
+                
+        # If AI generated CoT messages, give the user a moment to read them
+        if len(ai_msg_ids) > 1:
+            time.sleep(2)
                 
         # 3. Post Final Reply (Bulletproof)
         def post_final(env):
@@ -67,7 +72,7 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
         
         # 4. Delete Placeholder (Bulletproof)
         def delete_placeholder(env):
-            env['mail.message'].sudo().browse([placeholder_id]).unlink()
+            env['mail.message'].sudo().browse(ai_msg_ids).unlink()
         run_with_retry(delete_placeholder)
         
     except Exception as e:
