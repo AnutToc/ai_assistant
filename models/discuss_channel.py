@@ -46,11 +46,25 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
                 subtype_xmlid='mail.mt_comment',
             )
             
-            # 7. Delete placeholders and CoT messages
-            if ai_msg_ids:
-                env['mail.message'].sudo().browse(ai_msg_ids).unlink()
-                
+            # Commit the final reply immediately so it's 100% safe from subsequent errors
             env.cr.commit()
+            
+            # 7. Delete placeholders and CoT messages in a separate transaction with retry
+            # This prevents 'could not serialize access due to concurrent update'
+            # when the frontend simultaneously updates discuss_channel_member.fetched_message_id
+            if ai_msg_ids:
+                import time
+                for attempt in range(5):
+                    try:
+                        with registry.cursor() as del_cr:
+                            del_env = api.Environment(del_cr, uid, context)
+                            del_env['mail.message'].sudo().browse(ai_msg_ids).unlink()
+                        break  # Success
+                    except Exception as del_e:
+                        if 'concurrent update' in str(del_e):
+                            time.sleep(0.5)  # Wait for frontend to finish fetching and retry
+                        else:
+                            break
     except Exception as e:
         logging.getLogger(__name__).error("Async AI Error: %s", str(e))
 
