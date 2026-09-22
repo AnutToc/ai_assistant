@@ -11,60 +11,65 @@ SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 SUPPORTED_DOCUMENT_TYPES = ['application/pdf']
 
 def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partner_id):
+    import time
+    
+    def run_with_retry(func):
+        """Helper to run DB transactions with automatic retry on serialization failures."""
+        for attempt in range(5):
+            try:
+                registry = odoo.registry(db_name)
+                with registry.cursor() as cr:
+                    env = api.Environment(cr, uid, context)
+                    return func(env)
+            except Exception as e:
+                err_msg = str(e)
+                if 'concurrent update' in err_msg or 'could not serialize access' in err_msg:
+                    if attempt < 4:
+                        time.sleep(0.5 + (attempt * 0.5))  # Incremental backoff
+                        continue
+                raise e
+
     try:
-        registry = odoo.registry(db_name)
-        with registry.cursor() as cr:
-            env = api.Environment(cr, uid, context)
+        # 1. Post Placeholder (Bulletproof)
+        def post_placeholder(env):
             channel = env['discuss.channel'].browse(channel_id)
-            
-            # Create the placeholder message for AI
-            ai_msg_ids = []
-            
-            ai_msg = channel.with_context(mail_create_nosubscribe=True).message_post(
+            msg = channel.with_context(mail_create_nosubscribe=True).message_post(
                 body=Markup("<i>⏳ AI Assistant กำลังประมวลผล...</i>"),
                 author_id=bot_partner_id,
                 message_type='comment',
                 subtype_xmlid='mail.mt_comment',
             )
-            ai_msg_ids.append(ai_msg.id)
+            return msg.id
             
-            # Commit immediately so the UI receives the Websocket update
-            env.cr.commit()
-            
-            # 5. Send to AI Engine
+        placeholder_id = run_with_retry(post_placeholder)
+        
+        # 2. Call AI Engine (Outside of any long-running transaction locks)
+        registry = odoo.registry(db_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, uid, context)
+            channel = env['discuss.channel'].browse(channel_id)
             try:
-                response = env['ai.engine'].chat(messages_payload, channel=channel, ai_msg_ids=ai_msg_ids)
+                response = env['ai.engine'].chat(messages_payload, channel=channel, ai_msg_ids=[placeholder_id])
                 reply_content = response.get('content', "No response generated.")
             except Exception as e:
                 reply_content = f"System Error: {str(e)}"
-            
-            # 6. Post Final Reply
+                
+        # 3. Post Final Reply (Bulletproof)
+        def post_final(env):
+            channel = env['discuss.channel'].browse(channel_id)
             channel.with_context(mail_create_nosubscribe=True).message_post(
                 body=Markup(reply_content) if isinstance(reply_content, str) else reply_content,
                 author_id=bot_partner_id,
                 message_type='comment',
                 subtype_xmlid='mail.mt_comment',
             )
-            
-            # Commit the final reply immediately so it's 100% safe from subsequent errors
-            env.cr.commit()
-            
-            # 7. Delete placeholders and CoT messages in a separate transaction with retry
-            # This prevents 'could not serialize access due to concurrent update'
-            # when the frontend simultaneously updates discuss_channel_member.fetched_message_id
-            if ai_msg_ids:
-                import time
-                for attempt in range(5):
-                    try:
-                        with registry.cursor() as del_cr:
-                            del_env = api.Environment(del_cr, uid, context)
-                            del_env['mail.message'].sudo().browse(ai_msg_ids).unlink()
-                        break  # Success
-                    except Exception as del_e:
-                        if 'concurrent update' in str(del_e):
-                            time.sleep(0.5)  # Wait for frontend to finish fetching and retry
-                        else:
-                            break
+        run_with_retry(post_final)
+        
+        # 4. Delete Placeholder (Bulletproof)
+        def delete_placeholder(env):
+            env['mail.message'].sudo().browse([placeholder_id]).unlink()
+        run_with_retry(delete_placeholder)
+        
     except Exception as e:
         logging.getLogger(__name__).error("Async AI Error: %s", str(e))
 
