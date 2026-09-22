@@ -29,6 +29,34 @@ class AIEngine(models.AbstractModel):
         return 'read'
 
     @api.model
+    def _post_cot_message(self, channel, thought_html, ai_msg_ids):
+        """ Safely post CoT message to channel with retry logic for concurrency issues. """
+        import time
+        for attempt in range(5):
+            try:
+                with self.env.registry.cursor() as new_cr:
+                    env = api.Environment(new_cr, self.env.uid, self.env.context)
+                    channel_new_cr = env['discuss.channel'].browse(channel.id)
+                    bot_user = env.ref('ai_assistant.user_ai_assistant', raise_if_not_found=False)
+                    author_id = bot_user.partner_id.id if bot_user else env.user.partner_id.id
+                    
+                    msg = channel_new_cr.with_context(mail_create_nosubscribe=True).message_post(
+                        body=Markup(thought_html),
+                        author_id=author_id,
+                        message_type='comment',
+                        subtype_xmlid='mail.mt_comment',
+                    )
+                    if isinstance(ai_msg_ids, list):
+                        ai_msg_ids.append(msg.id)
+                break
+            except Exception as e:
+                if 'concurrent update' in str(e) or 'could not serialize access' in str(e):
+                    if attempt < 4:
+                        time.sleep(0.5)
+                        continue
+                raise e
+
+    @api.model
     def chat(self, messages, channel=None, ai_msg_ids=None):
         """ Main entry point for Chat UI to send messages. Handles tool calling loops automatically. """
         role = self._route_request(messages)
@@ -73,12 +101,23 @@ class AIEngine(models.AbstractModel):
 
             # 2. Handle Text Response
             if parsed_res.get('type') == 'text':
+                thought = parsed_res.get('thought', '')
+                if thought and channel:
+                    self._post_cot_message(channel, f"<div><i>🧠 {thought}</i></div>", ai_msg_ids)
                 return {'content': parsed_res.get('content')}
 
             # 3. Handle Tool Calls
             elif parsed_res.get('type') == 'tool_call':
                 tool_calls = parsed_res.get('tool_calls', [])
-                thought = parsed_res.get('content', '')
+                content_thought = parsed_res.get('content', '')
+                api_thought = parsed_res.get('thought', '')
+                
+                # Combine both if they exist
+                thought = api_thought
+                if content_thought and not thought:
+                    thought = content_thought
+                elif content_thought and thought:
+                    thought = thought + "<br/>" + content_thought
                 
                 if channel:
                     thought_html = ""
@@ -88,21 +127,7 @@ class AIEngine(models.AbstractModel):
                         func_name = tc.get('name') if provider.protocol_type != 'openai_compatible' else tc.get('function', {}).get('name')
                         thought_html += f"<div class='text-muted'>🛠️ <i>กำลังใช้งานเครื่องมือ: {func_name}...</i></div>"
                     if thought_html:
-                        if channel:
-                            with self.env.registry.cursor() as new_cr:
-                                env = api.Environment(new_cr, self.env.uid, self.env.context)
-                                channel_new_cr = env['discuss.channel'].browse(channel.id)
-                                bot_user = env.ref('ai_assistant.user_ai_assistant', raise_if_not_found=False)
-                                author_id = bot_user.partner_id.id if bot_user else env.user.partner_id.id
-                                
-                                msg = channel_new_cr.with_context(mail_create_nosubscribe=True).message_post(
-                                    body=Markup(thought_html),
-                                    author_id=author_id,
-                                    message_type='comment',
-                                    subtype_xmlid='mail.mt_comment',
-                                )
-                                if isinstance(ai_msg_ids, list):
-                                    ai_msg_ids.append(msg.id)
+                        self._post_cot_message(channel, thought_html, ai_msg_ids)
 
                 if provider.protocol_type == 'openai_compatible':
                     # OpenAI API requires sending the assistant's content back along with the tool calls
@@ -199,15 +224,32 @@ class AIEngine(models.AbstractModel):
         return final_prompt
 
     @api.model
+    def _extract_thought_from_content(self, message):
+        """ Extract reasoning_content or <think> tags from message. """
+        thought = message.get('reasoning_content') or message.get('reasoning') or ''
+        content = message.get('content') or ''
+        
+        if not thought and '<think>' in content and '</think>' in content:
+            start = content.find('<think>') + 7
+            end = content.find('</think>')
+            thought = content[start:end].strip()
+            content = (content[:start-7] + content[end+8:]).strip()
+            
+        return thought, content
+
+    @api.model
     def _process_openai_response(self, response):
         message = response.get('choices', [{}])[0].get('message', {})
+        thought, content = self._extract_thought_from_content(message)
+        
         if message.get('tool_calls'):
             return {
                 'type': 'tool_call', 
                 'tool_calls': message.get('tool_calls'),
-                'content': message.get('content', '')
+                'content': content,
+                'thought': thought
             }
-        return {'type': 'text', 'content': message.get('content', '')}
+        return {'type': 'text', 'content': content, 'thought': thought}
         
     @api.model
     def _process_gemini_response(self, response):

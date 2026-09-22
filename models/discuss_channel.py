@@ -17,7 +17,7 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
         """Helper to run DB transactions with automatic retry on serialization failures."""
         for attempt in range(5):
             try:
-                registry = odoo.registry(db_name)
+                registry = odoo.modules.registry.Registry(db_name)
                 with registry.cursor() as cr:
                     env = api.Environment(cr, uid, context)
                     return func(env)
@@ -44,7 +44,7 @@ def _run_ai_async(db_name, uid, context, channel_id, messages_payload, bot_partn
         placeholder_id = run_with_retry(post_placeholder)
         
         # 2. Call AI Engine (Outside of any long-running transaction locks)
-        registry = odoo.registry(db_name)
+        registry = odoo.modules.registry.Registry(db_name)
         with registry.cursor() as cr:
             env = api.Environment(cr, uid, context)
             channel = env['discuss.channel'].browse(channel_id)
