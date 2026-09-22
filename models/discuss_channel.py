@@ -174,12 +174,17 @@ class DiscussChannel(models.Model):
                     if not messages_payload:
                         messages_payload = [{'role': 'user', 'content': _clean_html(message.body)}]
                     
-                    # Run AI in a background thread to prevent UI blocking
-                    t = threading.Thread(
-                        target=_run_ai_async, 
-                        args=(self.env.cr.dbname, self.env.uid, self.env.context, self.id, messages_payload, bot_partner.id)
-                    )
-                    t.start()
+                    # Run AI in a background thread AFTER the main transaction commits
+                    # This prevents 'could not serialize access due to concurrent update' errors
+                    # because the main thread holds a lock on the discuss.channel record.
+                    def start_ai_thread():
+                        t = threading.Thread(
+                            target=_run_ai_async, 
+                            args=(self.env.cr.dbname, self.env.uid, self.env.context, self.id, messages_payload, bot_partner.id)
+                        )
+                        t.start()
+                    
+                    self.env.cr.postcommit.add(start_ai_thread)
         except Exception as e:
             pass
             
