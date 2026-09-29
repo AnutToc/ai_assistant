@@ -1,0 +1,135 @@
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+@import "tw-shimmer";
+
+@theme {
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #3b82f6;
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-primary: #2563eb;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f8fafc;
+  --color-secondary-foreground: #0f172a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-sidebar: #f8fafc;
+  --color-sidebar-foreground: #0f172a;
+  --color-sidebar-primary: #2563eb;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #f1f5f9;
+  --color-sidebar-accent-foreground: #0f172a;
+  --color-sidebar-border: #e2e8f0;
+  --color-sidebar-ring: #3b82f6;
+
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+/* ONLY scope variables and resets to .ai-chat-root, NEVER to :root or html */
+.ai-chat-root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+
+  --composer-radius: 1rem;
+  --composer-padding: 8px;
+  --composer-bg: #f8fafc;
+  --thread-max-width: 44rem;
+
+  box-sizing: border-box;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
+}
+
+/* Scoped resets strictly within .ai-chat-root so Odoo is untouched */
+.ai-chat-root *,
+.ai-chat-root *::before,
+.ai-chat-root *::after {
+  box-sizing: border-box;
+  border-color: #e2e8f0;
+}
+
+.ai-chat-root button {
+  cursor: pointer;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ai-chat-root input {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  outline: none;
+}
+
+.ai-chat-root textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background-color: transparent;
+  resize: none !important;
+}
+
+/* Ensure thread list item more button is always visible on hover and active */
+.ai-chat-root [data-slot="aui_thread-list-item"]:hover [data-slot="aui_thread-list-item-more"],
+.ai-chat-root [data-slot="aui_thread-list-item"][data-active] [data-slot="aui_thread-list-item-more"],
+.ai-chat-root [data-slot="aui_thread-list-item-more"][data-state="open"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Radix UI Dropdown Portal styling when mounted in document.body */
+[data-slot="aui_thread-list-item-more-content"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  z-index: 99999 !important;
+  border-radius: 0.75rem !important;
+  padding: 6px !important;
+}
+

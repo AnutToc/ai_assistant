@@ -225,15 +225,21 @@ class AIEngine(models.AbstractModel):
 
     @api.model
     def _extract_thought_from_content(self, message):
-        """ Extract reasoning_content or <think> tags from message. """
+        """ Extract reasoning_content or <think>/<thought>/<reasoning> tags from message. """
+        import re
         thought = message.get('reasoning_content') or message.get('reasoning') or ''
         content = message.get('content') or ''
         
-        if not thought and '<think>' in content and '</think>' in content:
-            start = content.find('<think>') + 7
-            end = content.find('</think>')
-            thought = content[start:end].strip()
-            content = (content[:start-7] + content[end+8:]).strip()
+        # Check for various thinking/thought XML tags
+        tags = ['thought', 'think', 'reasoning']
+        for tag in tags:
+            pattern = rf'<{tag}>(.*?)(?:</{tag}>|$)'
+            match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+            if match:
+                extracted = match.group(1).strip()
+                if extracted:
+                    thought = (thought + "\n\n" + extracted).strip() if thought else extracted
+                content = re.sub(pattern, '', content, flags=re.DOTALL | re.IGNORECASE).strip()
             
         return thought, content
 
@@ -255,37 +261,58 @@ class AIEngine(models.AbstractModel):
     def _process_gemini_response(self, response):
         parts = response.get('candidates', [{}])[0].get('content', {}).get('parts', [])
         if not parts:
-            return {'type': 'text', 'content': "No content returned from Gemini."}
+            return {'type': 'text', 'content': "No content returned from Gemini.", 'thought': ''}
             
         thought_texts = []
+        regular_texts = []
         for part in parts:
-            if 'text' in part:
-                thought_texts.append(part['text'])
+            text = part.get('text', '')
+            if part.get('thought'):
+                thought_texts.append(text)
+            else:
+                if 'text' in part:
+                    regular_texts.append(text)
             if 'functionCall' in part:
-                # Format to standard tool call format
+                raw_thought = '\n'.join(thought_texts)
+                raw_content = ''.join(regular_texts)
+                extracted_thought, clean_content = self._extract_thought_from_content({'content': raw_content, 'reasoning_content': raw_thought})
                 return {
                     'type': 'tool_call', 
                     'tool_calls': [{'name': part['functionCall']['name'], 'args': part['functionCall'].get('args', {})}],
-                    'content': ''.join(thought_texts)
+                    'content': clean_content,
+                    'thought': extracted_thought
                 }
         
-        return {'type': 'text', 'content': ''.join(thought_texts)}
+        raw_thought = '\n'.join(thought_texts)
+        raw_content = ''.join(regular_texts)
+        extracted_thought, clean_content = self._extract_thought_from_content({'content': raw_content, 'reasoning_content': raw_thought})
+        return {'type': 'text', 'content': clean_content, 'thought': extracted_thought}
         
     @api.model
     def _process_anthropic_response(self, response):
         content_blocks = response.get('content', [])
         thought_texts = []
+        regular_texts = []
         for block in content_blocks:
-            if block.get('type') == 'text':
-                thought_texts.append(block.get('text', ''))
-            if block.get('type') == 'tool_use':
+            if block.get('type') == 'thinking':
+                thought_texts.append(block.get('thinking', ''))
+            elif block.get('type') == 'text':
+                regular_texts.append(block.get('text', ''))
+            elif block.get('type') == 'tool_use':
+                raw_thought = '\n'.join(thought_texts)
+                raw_content = ''.join(regular_texts)
+                extracted_thought, clean_content = self._extract_thought_from_content({'content': raw_content, 'reasoning_content': raw_thought})
                 return {
                     'type': 'tool_call', 
                     'tool_calls': [{'name': block['name'], 'args': block['input']}],
-                    'content': ''.join(thought_texts)
+                    'content': clean_content,
+                    'thought': extracted_thought
                 }
                 
-        return {'type': 'text', 'content': ''.join(thought_texts)}
+        raw_thought = '\n'.join(thought_texts)
+        raw_content = ''.join(regular_texts)
+        extracted_thought, clean_content = self._extract_thought_from_content({'content': raw_content, 'reasoning_content': raw_thought})
+        return {'type': 'text', 'content': clean_content, 'thought': extracted_thought}
 
     @api.model
     def _setup_ai_user(self):
@@ -328,3 +355,175 @@ class AIEngine(models.AbstractModel):
                 'res_id': user.id, 
                 'noupdate': True
             })
+
+
+    @api.model
+    def chat_stream(self, messages):
+        """ Generator function for React UI to stream events via SSE. """
+        role = self._route_request(messages)
+        
+        provider = self.env['ai.provider'].search([('ai_role', '=', role), ('is_active', '=', True)], limit=1)
+        if not provider:
+            provider = self.env['ai.provider'].search([('ai_role', '=', 'read'), ('is_active', '=', True)], limit=1)
+            if not provider:
+                provider = self.env['ai.provider'].search([('is_active', '=', True)], limit=1)
+                
+        if not provider:
+            yield {'event': 'error', 'data': {'error': f"No active AI Provider configured for role '{role}'."}}
+            return
+
+        tools = self._get_tools(role)
+        icp = self.env['ir.config_parameter'].sudo()
+        max_turns = int(icp.get_param('odoo_ai_assistant.max_tool_turns', 10))
+        
+        system_instruction = self._get_system_prompt()
+        if messages and messages[0].get('role') != 'system':
+            messages.insert(0, {'role': 'system', 'content': system_instruction})
+        elif messages and messages[0].get('role') == 'system':
+            messages[0]['content'] = system_instruction + "\n\n" + messages[0]['content']
+
+        yield {'event': 'thinking', 'data': {'text': 'กำลังวิเคราะห์คำถาม...'}}
+
+        for turn in range(max_turns):
+            if provider.protocol_type == 'openai_compatible':
+                accumulated_tool_calls = {}
+                is_tool_call = False
+                stream_thought = ""
+                stream_content = ""
+
+                try:
+                    for chunk in self.env['ai.adapter.openai'].send_stream_request(provider, messages, tools=tools):
+                        choice = chunk.get('choices', [{}])[0]
+                        delta = choice.get('delta', {})
+
+                        # 1. Reasoning / Thinking token
+                        reasoning_piece = delta.get('reasoning_content') or delta.get('reasoning')
+                        if reasoning_piece:
+                            stream_thought += reasoning_piece
+                            yield {'event': 'thinking', 'data': {'text': reasoning_piece}}
+
+                        # 2. Text Content token
+                        content_piece = delta.get('content')
+                        if content_piece:
+                            stream_content += content_piece
+                            yield {'event': 'text-delta', 'data': {'text': content_piece}}
+
+                        # 3. Tool Calls (streamed in fragments)
+                        if delta.get('tool_calls'):
+                            is_tool_call = True
+                            for tc in delta['tool_calls']:
+                                idx = tc.get('index', 0)
+                                if idx not in accumulated_tool_calls:
+                                    accumulated_tool_calls[idx] = {
+                                        'id': tc.get('id', ''),
+                                        'name': tc.get('function', {}).get('name', ''),
+                                        'arguments': tc.get('function', {}).get('arguments', '')
+                                    }
+                                else:
+                                    if tc.get('id'):
+                                        accumulated_tool_calls[idx]['id'] += tc['id']
+                                    if tc.get('function', {}).get('name'):
+                                        accumulated_tool_calls[idx]['name'] += tc['function']['name']
+                                    if tc.get('function', {}).get('arguments'):
+                                        accumulated_tool_calls[idx]['arguments'] += tc['function']['arguments']
+                except Exception as e:
+                    yield {'event': 'error', 'data': {'error': str(e)}}
+                    return
+
+                if is_tool_call and accumulated_tool_calls:
+                    formatted_tool_calls = []
+                    for idx in sorted(accumulated_tool_calls.keys()):
+                        tc_data = accumulated_tool_calls[idx]
+                        formatted_tool_calls.append({
+                            'id': tc_data['id'] or f"call_{idx}",
+                            'type': 'function',
+                            'function': {
+                                'name': tc_data['name'],
+                                'arguments': tc_data['arguments']
+                            }
+                        })
+
+                    messages.append({
+                        'role': 'assistant',
+                        'content': stream_content or stream_thought or None,
+                        'tool_calls': formatted_tool_calls
+                    })
+
+                    for tc in formatted_tool_calls:
+                        func_name = tc.get('function', {}).get('name')
+                        try:
+                            func_args = json.loads(tc.get('function', {}).get('arguments', '{}'))
+                        except Exception:
+                            func_args = {}
+
+                        tool_id = tc.get('id')
+                        yield {'event': 'tool-call', 'data': {'id': tool_id, 'name': func_name, 'args': func_args}}
+
+                        import time
+                        start_time = time.time()
+                        result = self.env['ai.tools.executor'].execute_tool(func_name, func_args)
+                        duration_ms = int((time.time() - start_time) * 1000)
+
+                        summary = "ดำเนินการสำเร็จ"
+                        if isinstance(result, list):
+                            summary = f"พบ {len(result)} รายการ"
+                        elif isinstance(result, dict):
+                            if 'error' in result:
+                                summary = f"Error: {result['error'][:50]}"
+                            elif 'count' in result:
+                                summary = f"พบ {result['count']} รายการ"
+                            elif 'success' in result:
+                                summary = "บันทึกสำเร็จ"
+
+                        yield {'event': 'tool-result', 'data': {'id': tool_id, 'name': func_name, 'summary': summary, 'duration_ms': duration_ms}}
+
+                        result_str = json.dumps(result, default=str)
+                        messages.append({'role': 'tool', 'tool_call_id': tool_id, 'name': func_name, 'content': result_str})
+
+                    continue
+                else:
+                    return
+
+            elif provider.protocol_type == 'gemini_native':
+                raw_response = self.env['ai.adapter.gemini'].send_request(provider, messages, tools=tools)
+                parsed_res = self._process_gemini_response(raw_response)
+            elif provider.protocol_type == 'anthropic_native':
+                raw_response = self.env['ai.adapter.anthropic'].send_request(provider, messages, tools=tools)
+                parsed_res = self._process_anthropic_response(raw_response)
+            else:
+                yield {'event': 'error', 'data': {'error': f"Unknown Protocol Type: {provider.protocol_type}"}}
+                return
+
+            if parsed_res.get('type') == 'text':
+                thought = parsed_res.get('thought', '')
+                if thought:
+                    yield {'event': 'thinking', 'data': {'text': thought}}
+                yield {'event': 'text-delta', 'data': {'text': parsed_res.get('content', '')}}
+                return
+
+            elif parsed_res.get('type') == 'tool_call':
+                tool_calls = parsed_res.get('tool_calls', [])
+                for tc in tool_calls:
+                    func_name = tc.get('name')
+                    func_args = tc.get('args', {})
+                    tool_id = tc.get('id', 'call_123')
+                    yield {'event': 'tool-call', 'data': {'id': tool_id, 'name': func_name, 'args': func_args}}
+                    import time
+                    start_time = time.time()
+                    result = self.env['ai.tools.executor'].execute_tool(func_name, func_args)
+                    duration_ms = int((time.time() - start_time) * 1000)
+                    summary = "ดำเนินการสำเร็จ"
+                    if isinstance(result, list):
+                        summary = f"พบ {len(result)} รายการ"
+                    elif isinstance(result, dict):
+                        if 'error' in result:
+                            summary = f"Error: {result['error'][:50]}"
+                        elif 'count' in result:
+                            summary = f"พบ {result['count']} รายการ"
+                        elif 'success' in result:
+                            summary = "บันทึกสำเร็จ"
+                    yield {'event': 'tool-result', 'data': {'id': tool_id, 'name': func_name, 'summary': summary, 'duration_ms': duration_ms}}
+                    result_str = json.dumps(result, default=str)
+                    messages.append({'role': 'tool', 'tool_call_id': tool_id, 'name': func_name, 'content': result_str})
+
+        yield {'event': 'error', 'data': {'error': 'System: Task stopped because it exceeded maximum tool execution turns.'}}

@@ -7,3 +7,5 @@ access_ai_notification_rule_user,access.ai.notification.rule.user,model_ai_notif
 access_ai_notification_rule_admin,access.ai.notification.rule.admin,model_ai_notification_rule,base.group_system,1,1,1,1
 access_ai_notification_log_admin,access.ai.notification.log.admin,model_ai_notification_log,base.group_system,1,1,1,1
 access_ai_notification_log_user,access.ai.notification.log.user,model_ai_notification_log,base.group_user,1,0,0,0
+access_ai_chat_thread,ai_chat_thread,model_ai_chat_thread,base.group_user,1,1,1,1
+access_ai_chat_message,ai_chat_message,model_ai_chat_message,base.group_user,1,1,1,1

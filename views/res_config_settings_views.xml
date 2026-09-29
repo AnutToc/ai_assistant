@@ -31,6 +31,9 @@
                         <setting id="ai_custom_system_prompt_setting" title="Custom System Prompt" help="Additional instructions to append to the system prompt globally.">
                             <field name="ai_custom_system_prompt"/>
                         </setting>
+                        <setting id="ai_chat_ui_mode_setting" title="Chat Interface Mode" help="Choose whether to use Odoo Discuss, the new React Chat UI, or Both.">
+                            <field name="ai_chat_ui_mode" widget="radio"/>
+                        </setting>
                     </block>
                 </app>
             </xpath>

@@ -1,12 +1,25 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { Component } from "@odoo/owl";
+import { Component, onWillStart, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 export class AiSystrayItem extends Component {
     setup() {
         this.action = useService("action");
+        this.state = useState({ isVisible: true });
+        
+        onWillStart(async () => {
+            try {
+                const res = await fetch("/api/ai/config");
+                const config = await res.json();
+                if (config.chat_ui_mode === 'react') {
+                    this.state.isVisible = false;
+                }
+            } catch (e) {
+                // Keep default visible
+            }
+        });
     }
 
     onClickAiIcon() {

@@ -45,6 +45,15 @@ class ResConfigSettings(models.TransientModel):
         help="Additional instructions to append to the system prompt globally."
     )
 
+    ai_chat_ui_mode = fields.Selection([
+        ('discuss', 'Odoo Discuss'),
+        ('react', 'Chat UI'),
+        ('both', 'Both'),
+    ], string="AI Chat Interface Mode",
+       config_parameter='odoo_ai_assistant.chat_ui_mode',
+       default='both',
+       help="Choose whether to use Odoo Discuss, Chat UI, or Both.")
+
     @api.model
     def get_values(self):
         res = super(ResConfigSettings, self).get_values()
