@@ -1,6 +1,6 @@
 {
     'name': 'AI Assistant',
-    'version': '1.0.0',
+    'version': '13.0.1.0.0',
     'category': 'Productivity',
     'summary': 'Provider-Agnostic AI Assistant integrated into Odoo',
     'description': 'AI Gateway for Odoo supporting OpenAI, Gemini, and Anthropic protocols.',
@@ -8,6 +8,7 @@
     'data': [
         'security/ir.model.access.csv',
         'security/ai_security.xml',
+        'views/assets.xml',
         'views/ai_provider_views.xml',
         'views/ai_prompt_template_views.xml',
         'views/ai_notification_rule_views.xml',
@@ -17,19 +18,11 @@
         'data/ai_prompt_template_data.xml',
         'data/ai_notification_cron.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'ai_assistant/static/src/components/floating_widget/floating_widget.js',
-            'ai_assistant/static/src/components/floating_widget/floating_widget.xml',
-            'ai_assistant/static/src/components/floating_widget/floating_widget.scss',
-            'ai_assistant/static/lib/react_chat_bundle.css',
-            'ai_assistant/static/lib/react_chat_bundle.js',
-            'ai_assistant/static/src/react_chat/react_mount.js',
-            'ai_assistant/static/src/react_chat/react_mount.xml',
-            'ai_assistant/static/src/react_chat/react_fullpage.js',
-            'ai_assistant/static/src/react_chat/react_fullpage.xml',
-        ],
-    },
+    'qweb': [
+        'static/src/xml/floating_widget.xml',
+        'static/src/xml/react_mount.xml',
+        'static/src/xml/react_fullpage.xml',
+    ],
     'installable': True,
     'post_init_hook': 'post_init_hook',
     'application': True,

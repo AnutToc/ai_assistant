@@ -6,36 +6,92 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app data-string="AI Assistant" string="AI Assistant" name="ai_assistant">
-                    <block title="AI Permissions" name="ai_security_setting_container">
-                        <setting id="ai_create_access_setting" title="Allow AI to create new records" help="Enable AI to create new records in Odoo." groups="base.group_no_one">
-                            <field name="ai_enable_create_tools"/>
-                        </setting>
-                        <setting id="ai_update_access_setting" title="Allow AI to update existing records" help="Enable AI to modify existing records in Odoo." groups="base.group_no_one">
-                            <field name="ai_enable_update_tools"/>
-                        </setting>
-                        <setting id="ai_delete_access_setting" title="Allow AI to delete existing records" help="Enable AI to permanently delete records in Odoo." groups="base.group_no_one">
-                            <field name="ai_enable_delete_tools"/>
-                        </setting>
-                    </block>
-                    <block title="AI Configuration" name="ai_config_setting_container">
-                        <setting id="ai_max_history_setting" title="Max History Messages" help="Number of previous messages to remember in the conversation context.">
-                            <field name="ai_max_history_messages"/>
-                        </setting>
-                        <setting id="ai_max_tool_turns_setting" title="Max Tool Execution Turns" help="Maximum number of consecutive tool calls allowed per request to prevent infinite loops.">
-                            <field name="ai_max_tool_turns"/>
-                        </setting>
-                        <setting id="ai_write_keywords_setting" title="Write Action Keywords" help="Comma-separated list of keywords to trigger the Write AI Provider.">
-                            <field name="ai_write_keywords"/>
-                        </setting>
-                        <setting id="ai_custom_system_prompt_setting" title="Custom System Prompt" help="Additional instructions to append to the system prompt globally.">
-                            <field name="ai_custom_system_prompt"/>
-                        </setting>
-                        <setting id="ai_chat_ui_mode_setting" title="Chat Interface Mode" help="Choose whether to use Odoo Discuss, the new React Chat UI, or Both.">
-                            <field name="ai_chat_ui_mode" widget="radio"/>
-                        </setting>
-                    </block>
-                </app>
+                <div class="app_settings_block" data-string="AI Assistant" data-key="ai_assistant">
+                    <h2>AI Permissions</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box" groups="base.group_no_one">
+                            <div class="o_setting_left_pane">
+                                <field name="ai_enable_create_tools"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_enable_create_tools" string="Enable AI Create Actions"/>
+                                <div class="text-muted">Allow AI to create new records in Odoo.</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" groups="base.group_no_one">
+                            <div class="o_setting_left_pane">
+                                <field name="ai_enable_update_tools"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_enable_update_tools" string="Enable AI Update Actions"/>
+                                <div class="text-muted">Allow AI to update existing records in Odoo.</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" groups="base.group_no_one">
+                            <div class="o_setting_left_pane">
+                                <field name="ai_enable_delete_tools"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_enable_delete_tools" string="Enable AI Delete Actions"/>
+                                <div class="text-muted">Allow AI to delete records in Odoo.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>AI Configuration</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_max_history_messages" string="Max History Messages"/>
+                                <div class="text-muted">Number of previous messages to remember.</div>
+                                <div class="content-group">
+                                    <field name="ai_max_history_messages"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_max_tool_turns" string="Max Tool Execution Turns"/>
+                                <div class="text-muted">Maximum consecutive tool calls per request.</div>
+                                <div class="content-group">
+                                    <field name="ai_max_tool_turns"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_write_keywords" string="Write Action Keywords"/>
+                                <div class="text-muted">Comma-separated keywords to trigger the Write AI Provider.</div>
+                                <div class="content-group">
+                                    <field name="ai_write_keywords"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_custom_system_prompt" string="Custom System Prompt"/>
+                                <div class="text-muted">Additional instructions for the system prompt.</div>
+                                <div class="content-group">
+                                    <field name="ai_custom_system_prompt"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_chat_ui_mode" string="Chat Interface Mode"/>
+                                <div class="text-muted">Choose: Odoo Discuss, Chat UI, or Both.</div>
+                                <div class="content-group">
+                                    <field name="ai_chat_ui_mode" widget="radio"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>

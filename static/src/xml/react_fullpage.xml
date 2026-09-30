@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="ai_assistant.ReactChatFullPage">
+        <div class="ai-react-fullpage-container" style="height: 100%; width: 100%;"></div>
+    </t>
+</templates>

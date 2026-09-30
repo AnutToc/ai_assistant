@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="ai_assistant.ReactChatFloat">
+        <div class="ai-react-float-container"></div>
+    </t>
+</templates>

@@ -4,13 +4,13 @@
         <field name="name">ai.notification.rule.tree</field>
         <field name="model">ai.notification.rule</field>
         <field name="arch" type="xml">
-            <list string="Notification Rules">
+            <tree string="Notification Rules">
                 <field name="name"/>
                 <field name="model_id"/>
                 <field name="channel_id"/>
                 <field name="repeat_interval_days"/>
                 <field name="is_active" widget="boolean_toggle"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -20,7 +20,8 @@
         <field name="arch" type="xml">
             <form string="Notification Rule">
                 <sheet>
-                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="is_active"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('is_active','=',True)]}"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="e.g. Invoices Overdue > 15 Days"/>
@@ -30,7 +31,8 @@
                         <group>
                             <field name="model_id"/>
                             <field name="model_name" invisible="1"/>
-                            <field name="domain" widget="domain" options="{'in_dialog': True, 'model': 'model_name'}"/>
+                            <field name="domain" widget="domain"
+                                   options="{'model': 'model_name'}"/>
                         </group>
                         <group>
                             <field name="channel_id"/>
@@ -40,7 +42,9 @@
                     </group>
                     <notebook>
                         <page string="Prompt Template" name="prompt_template">
-                            <field name="prompt_template" placeholder="Please summarize these records: {records}" style="height: 150px;"/>
+                            <field name="prompt_template"
+                                   placeholder="Please summarize these records: {records}"
+                                   style="height: 150px;"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -51,6 +55,6 @@
     <record id="action_ai_notification_rule" model="ir.actions.act_window">
         <field name="name">Notification Rules</field>
         <field name="res_model">ai.notification.rule</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
     </record>
 </odoo>

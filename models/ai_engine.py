@@ -1,6 +1,5 @@
 import json
 import logging
-from markupsafe import Markup
 
 from odoo import api, models
 from odoo.exceptions import UserError
@@ -34,14 +33,14 @@ class AIEngine(models.AbstractModel):
         import time
         for attempt in range(5):
             try:
-                with self.env.registry.cursor() as new_cr:
+                with self.pool.cursor() as new_cr:
                     env = api.Environment(new_cr, self.env.uid, self.env.context)
-                    channel_new_cr = env['discuss.channel'].browse(channel.id)
+                    channel_new_cr = env['mail.channel'].browse(channel.id)
                     bot_user = env.ref('ai_assistant.user_ai_assistant', raise_if_not_found=False)
                     author_id = bot_user.partner_id.id if bot_user else env.user.partner_id.id
                     
                     msg = channel_new_cr.with_context(mail_create_nosubscribe=True).message_post(
-                        body=Markup(thought_html),
+                        body=thought_html,
                         author_id=author_id,
                         message_type='comment',
                         subtype_xmlid='mail.mt_comment',
@@ -320,15 +319,6 @@ class AIEngine(models.AbstractModel):
         partner = self.env.ref('ai_assistant.partner_ai_assistant', raise_if_not_found=False)
         if not partner:
             vals = {'name': 'AI Assistant', 'email': 'ai@odoo.local', 'tz': 'UTC', 'active': True}
-            
-            # Handle strict database constraints from other installed modules dynamically
-            if 'autopost_bills' in self.env['res.partner']._fields:
-                field_type = self.env['res.partner']._fields['autopost_bills'].type
-                if field_type == 'selection':
-                    vals['autopost_bills'] = 'never'
-                elif field_type == 'boolean':
-                    vals['autopost_bills'] = False
-                    
             partner = self.env['res.partner'].sudo().create(vals)
             self.env['ir.model.data'].sudo().create({
                 'name': 'partner_ai_assistant', 

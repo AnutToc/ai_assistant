@@ -7,6 +7,6 @@ from . import ai_adapter_anthropic
 from . import ai_tools_schema
 from . import ai_tools_executor
 from . import ai_engine
-from . import discuss_channel
+from . import mail_channel
 from . import ai_notification_rule
 from . import ai_chat_session

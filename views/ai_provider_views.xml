@@ -4,13 +4,13 @@
         <field name="name">ai.provider.tree</field>
         <field name="model">ai.provider</field>
         <field name="arch" type="xml">
-            <list string="AI Providers">
+            <tree string="AI Providers">
                 <field name="name"/>
                 <field name="protocol_type"/>
                 <field name="ai_role"/>
                 <field name="model_name"/>
                 <field name="is_active" widget="boolean_toggle"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -20,7 +20,8 @@
         <field name="arch" type="xml">
             <form string="AI Provider">
                 <sheet>
-                    <widget name="web_ribbon" title="Active" bg_color="bg-success" invisible="not is_active"/>
+                    <widget name="web_ribbon" title="Active" bg_color="bg-success"
+                            attrs="{'invisible': [('is_active','=',False)]}"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="e.g., Qwen Local"/>
@@ -46,6 +47,6 @@
     <record id="action_ai_provider" model="ir.actions.act_window">
         <field name="name">AI Providers</field>
         <field name="res_model">ai.provider</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
     </record>
 </odoo>

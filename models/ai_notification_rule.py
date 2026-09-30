@@ -31,7 +31,7 @@ class AINotificationRule(models.Model):
         help="Use {records} to inject the JSON data of the matched records."
     )
     
-    channel_id = fields.Many2one('discuss.channel', string='Target Channel', required=True)
+    channel_id = fields.Many2one('mail.channel', string='Target Channel', required=True)
     
     repeat_interval_days = fields.Integer(
         string='Repeat Interval (Days)', 

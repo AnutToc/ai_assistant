@@ -4,13 +4,13 @@
         <field name="name">ai.prompt.template.tree</field>
         <field name="model">ai.prompt.template</field>
         <field name="arch" type="xml">
-            <list string="Prompt Templates">
+            <tree string="Prompt Templates">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="category"/>
                 <field name="prompt_text" widget="text"/>
                 <field name="is_active" widget="boolean_toggle"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -20,7 +20,8 @@
         <field name="arch" type="xml">
             <form string="Prompt Template">
                 <sheet>
-                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="is_active"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('is_active','=',True)]}"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="e.g., Summarize today's sales"/>
@@ -62,7 +63,7 @@
     <record id="action_ai_prompt_template" model="ir.actions.act_window">
         <field name="name">Prompt Templates</field>
         <field name="res_model">ai.prompt.template</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="context">{'search_default_filter_active': 1}</field>
     </record>
 </odoo>

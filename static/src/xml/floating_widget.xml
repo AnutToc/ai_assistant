@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="ai_assistant.SystrayItem">
+        <div class="o_MessagingMenu dropdown" t-if="widget.isVisible">
+            <a class="dropdown-toggle o-no-caret" title="Ask AI Assistant" role="button">
+                <i class="fa fa-magic fa-lg" role="img" aria-label="AI Assistant"></i>
+            </a>
+        </div>
+    </t>
+</templates>

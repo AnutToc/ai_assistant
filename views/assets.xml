@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="AI Assistant Backend Assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" href="/ai_assistant/static/src/css/floating_widget.css"/>
+            <link rel="stylesheet" href="/ai_assistant/static/lib/react_chat_bundle.css"/>
+            <script type="text/javascript" src="/ai_assistant/static/src/js/floating_widget.js"/>
+            <script type="text/javascript" src="/ai_assistant/static/lib/react_chat_bundle.js"/>
+            <script type="text/javascript" src="/ai_assistant/static/src/js/react_mount.js"/>
+            <script type="text/javascript" src="/ai_assistant/static/src/js/react_fullpage.js"/>
+        </xpath>
+    </template>
+</odoo>

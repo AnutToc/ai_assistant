@@ -103,7 +103,7 @@ class AIChatController(http.Controller):
             request.env.cr.commit()
 
             # Capture context before leaving the request thread/scope
-            registry = request.env.registry
+            registry = odoo.registry(request.env.cr.dbname)
             uid = request.env.user.id
             context = dict(request.env.context)
             thread_saved_id = thread.id
